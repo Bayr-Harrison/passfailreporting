@@ -48,44 +48,44 @@ def generate_coversheets_zip(curriculum, startdate, enddate):
         # Save the entire DataFrame to one Excel file
         excel_buffer = BytesIO()
         with pd.ExcelWriter(excel_buffer, engine='openpyxl') as writer:
-            df.to_excel(writer, index=False, sheet_name="Coversheet_Data")
+            df.to_excel(writer, index=False, sheet_name="Pass_Fail_Report")
         
         # Save Excel file in the zip
         excel_buffer.seek(0)
-        zip_file.writestr("Coversheets.xlsx", excel_buffer.read())
+        zip_file.writestr("Pass_Fail_Report.xlsx", excel_buffer.read())
 
     zip_buffer.seek(0)
     return zip_buffer
 
 # Streamlit interface
-st.title("Generate Exam Coversheets by Curriculum and Date Range")
-st.write("Select a curriculum and date range to generate an Excel coversheet with data within the specified criteria.")
+st.title("Generate Theory Exam Pass/Fail Report by Faculty and Date Range")
+st.write("Select a Faculty and date range to generate an Excel Pass Fail Report within the specified period")
 
 # Curriculum selection
-curriculum = st.selectbox("Select Curriculum:", ["EASA", "GACA", "UAS"])
+curriculum = st.selectbox("Select Faculty:", ["EASA", "GACA", "UAS"])
 
 # Date input from user
 startdate = st.date_input("Select Start Date:")
 enddate = st.date_input("Select End Date:")
 
 # Button to generate and download coversheets
-if st.button("Generate Coversheets"):
+if st.button("Generate Report"):
     if startdate > enddate:
         st.error("Error: End Date must be after Start Date.")
     else:
         try:
-            st.write("Generating coversheets...")
+            st.write("Generating Report...")
 
             # Generate the zip file in memory
             zip_file = generate_coversheets_zip(curriculum, startdate, enddate)
 
             # Download button for the zip file
             st.download_button(
-                label="Download All Coversheets as ZIP",
+                label="Download Report",
                 data=zip_file,
-                file_name="coversheets.zip",
+                file_name="Pass_Fail_Report.zip",
                 mime="application/zip"
             )
-            st.success("Coversheets zip generated successfully!")
+            st.success("Pass Fail Report zip generated successfully!")
         except Exception as e:
             st.error(f"An error occurred: {e}")
