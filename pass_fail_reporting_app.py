@@ -5,6 +5,7 @@ import pg8000
 from io import BytesIO
 import zipfile
 from openpyxl.styles import Font, Border, Side, Alignment, PatternFill
+from openpyxl.utils import get_column_letter
 
 # Function to query database and generate coversheets in a zip file
 def generate_coversheets_zip(curriculum, startdate, enddate):
@@ -58,20 +59,22 @@ def generate_coversheets_zip(curriculum, startdate, enddate):
             df.to_excel(writer, index=False, sheet_name="Pass_Fail_Report")
             worksheet = writer.sheets["Pass_Fail_Report"]
 
-            # Set column widths
-            column_widths = {
-                'A': 20, 'B': 10, 'C': 15, 'D': 10, 'E': 15, 'F': 10, 'G': 20, 'H': 10, 'I': 15, 'J': 15
-            }
-            for col, width in column_widths.items():
-                worksheet.column_dimensions[col].width = width
-
-            # Apply styles to header row
+            # Apply header styles
             header_font = Font(bold=True, color="FFFFFF")
             header_fill = PatternFill(start_color="4F81BD", end_color="4F81BD", fill_type="solid")
             for cell in worksheet[1]:
                 cell.font = header_font
                 cell.fill = header_fill
                 cell.alignment = Alignment(horizontal="center", vertical="center")
+
+            # Set auto-filters on the header row
+            worksheet.auto_filter.ref = worksheet.dimensions
+
+            # Autosize columns based on content
+            for col in worksheet.columns:
+                max_length = max(len(str(cell.value)) for cell in col)
+                col_letter = get_column_letter(col[0].column)
+                worksheet.column_dimensions[col_letter].width = max_length + 2  # Add padding for readability
 
             # Apply borders and center alignment to all cells
             thin_border = Border(
