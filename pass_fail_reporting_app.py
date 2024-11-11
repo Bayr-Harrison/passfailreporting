@@ -96,8 +96,8 @@ def generate_coversheets_zip(curriculum, startdate, enddate):
     return zip_buffer
 
 # Streamlit interface
-st.title("Generate Theory Exam Pass/Fail Report by Faculty and Date Range")
-st.write("Select a Faculty and date range to generate an Excel Pass Fail Report within the specified period")
+st.title("Generate Theory Exam Pass/Fail Report")
+st.write("Generate an Excel Pass Fail Report within the specified period")
 
 # Curriculum selection
 curriculum = st.selectbox("Select Faculty:", ["EASA", "GACA", "UAS"])
