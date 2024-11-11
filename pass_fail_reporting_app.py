@@ -52,7 +52,7 @@ def generate_coversheets_zip(curriculum, startdate, enddate):
         
         # Save Excel file in the zip
         excel_buffer.seek(0)
-        zip_file.writestr(f"Pass_Fail_Report({startdate} - {enddate}).xlsx", excel_buffer.read())
+        zip_file.writestr(f"Report ( {startdate} to {enddate} ).xlsx", excel_buffer.read())
 
     zip_buffer.seek(0)
     return zip_buffer
