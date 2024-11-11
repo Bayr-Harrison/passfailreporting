@@ -4,6 +4,8 @@ import pandas as pd
 import pg8000
 from io import BytesIO
 import zipfile
+from openpyxl.styles import Font, Border, Side, Alignment
+from openpyxl import Workbook
 
 # Function to query database and generate coversheets in a zip file
 def generate_coversheets_zip(curriculum, startdate, enddate):
@@ -11,7 +13,7 @@ def generate_coversheets_zip(curriculum, startdate, enddate):
         database=os.environ["SUPABASE_DB_NAME"],
         user=os.environ["SUPABASE_USER"],
         password=os.environ["SUPABASE_PASSWORD"],
-        host=os.environ["SUPABSE_HOST"],
+        host=os.environ["SUPABASE_HOST"],
         port=os.environ["SUPABASE_PORT"]
     )
 
@@ -51,14 +53,42 @@ def generate_coversheets_zip(curriculum, startdate, enddate):
     # Create an in-memory ZIP file to store individual Excel files
     zip_buffer = BytesIO()
     with zipfile.ZipFile(zip_buffer, "w") as zip_file:
-        # Save the entire DataFrame to one Excel file
+        # Save the entire DataFrame to one Excel file with formatting
         excel_buffer = BytesIO()
         with pd.ExcelWriter(excel_buffer, engine='openpyxl') as writer:
             df.to_excel(writer, index=False, sheet_name="Pass_Fail_Report")
-        
-        # Save Excel file in the zip
+            worksheet = writer.sheets["Pass_Fail_Report"]
+
+            # Set column widths
+            column_widths = {
+                'A': 20, 'B': 10, 'C': 15, 'D': 10, 'E': 15, 'F': 10, 'G': 20, 'H': 10, 'I': 15, 'J': 15
+            }
+            for col, width in column_widths.items():
+                worksheet.column_dimensions[col].width = width
+
+            # Apply styles to header row
+            header_font = Font(bold=True, color="FFFFFF")
+            header_fill = "4F81BD"
+            for cell in worksheet[1]:
+                cell.font = header_font
+                cell.fill = header_fill
+                cell.alignment = Alignment(horizontal="center", vertical="center")
+
+            # Apply borders and center alignment to all cells
+            thin_border = Border(
+                left=Side(style="thin"), 
+                right=Side(style="thin"), 
+                top=Side(style="thin"), 
+                bottom=Side(style="thin")
+            )
+            for row in worksheet.iter_rows(min_row=2, max_row=worksheet.max_row, min_col=1, max_col=len(df.columns)):
+                for cell in row:
+                    cell.border = thin_border
+                    cell.alignment = Alignment(horizontal="center")
+
+        # Save formatted Excel file in the zip
         excel_buffer.seek(0)
-        zip_file.writestr(f"{curriculum} Report ( {startdate} to {enddate} ).xlsx", excel_buffer.read())
+        zip_file.writestr(f"{curriculum} Report ({startdate} to {enddate}).xlsx", excel_buffer.read())
 
     zip_buffer.seek(0)
     return zip_buffer
