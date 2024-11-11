@@ -4,8 +4,7 @@ import pandas as pd
 import pg8000
 from io import BytesIO
 import zipfile
-from openpyxl.styles import Font, Border, Side, Alignment
-from openpyxl import Workbook
+from openpyxl.styles import Font, Border, Side, Alignment, PatternFill
 
 # Function to query database and generate coversheets in a zip file
 def generate_coversheets_zip(curriculum, startdate, enddate):
@@ -68,7 +67,7 @@ def generate_coversheets_zip(curriculum, startdate, enddate):
 
             # Apply styles to header row
             header_font = Font(bold=True, color="FFFFFF")
-            header_fill = "4F81BD"
+            header_fill = PatternFill(start_color="4F81BD", end_color="4F81BD", fill_type="solid")
             for cell in worksheet[1]:
                 cell.font = header_font
                 cell.fill = header_fill
