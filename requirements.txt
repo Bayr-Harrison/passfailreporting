@@ -1,0 +1,7 @@
+streamlit
+pandas
+pg8000
+openpyxl
+os
+io
+zipfile
