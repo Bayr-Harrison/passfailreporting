@@ -23,6 +23,7 @@ def generate_coversheets_zip(curriculum, startdate, enddate):
                     student_list.nat_id,
                     student_list.class,
                     student_list.curriculum,
+                    exam_results.session,
                     exam_results.exam,
                     exam_results.result,
                     exam_results.date,
@@ -39,7 +40,7 @@ def generate_coversheets_zip(curriculum, startdate, enddate):
     db_connection.close()
 
     # Convert output to DataFrame for Excel export
-    col_names = ['Name', 'IATC ID', 'National ID', 'Class', 'Curriculum', 'Exam', 'Result', 'Date', 'Exam Type']
+    col_names = ['Name', 'IATC ID', 'National ID', 'Class', 'Curriculum', 'Session', 'Exam', 'Result', 'Date', 'Exam Type']
     df = pd.DataFrame(output_data, columns=col_names)
 
     # Create an in-memory ZIP file to store individual Excel files
