@@ -11,7 +11,7 @@ def generate_coversheets_zip(curriculum, startdate, enddate):
         database=os.environ["SUPABASE_DB_NAME"],
         user=os.environ["SUPABASE_USER"],
         password=os.environ["SUPABASE_PASSWORD"],
-        host=os.environ["SUPABASE_HOST"],
+        host=os.environ["SUPABSE_HOST"],
         port=os.environ["SUPABASE_PORT"]
     )
 
