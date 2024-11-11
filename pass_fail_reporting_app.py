@@ -33,6 +33,7 @@ def generate_coversheets_zip(curriculum, startdate, enddate):
                     WHERE student_list.curriculum = '{curriculum}' 
                     AND exam_results.date >= '{startdate}' 
                     AND exam_results.date <= '{enddate}'
+                    ORDER BY exam_results.date ASC, exam_results.session ASC
                 """
     db_cursor.execute(db_query)
     output_data = db_cursor.fetchall()
