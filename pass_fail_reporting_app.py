@@ -5,87 +5,87 @@ import pg8000
 from io import BytesIO
 import zipfile
 
-# Function to generate coversheets and save them to a zip file
-def generate_coversheets_zip(student_list=[]):
+# Function to query database and generate coversheets in a zip file
+def generate_coversheets_zip(curriculum, startdate, enddate):
     db_connection = pg8000.connect(
         database=os.environ["SUPABASE_DB_NAME"],
         user=os.environ["SUPABASE_USER"],
         password=os.environ["SUPABASE_PASSWORD"],
-        host=os.environ["SUPABSE_HOST"],
+        host=os.environ["SUPABASE_HOST"],
         port=os.environ["SUPABASE_PORT"]
     )
 
     db_cursor = db_connection.cursor()
-    student_list_string = ', '.join(map(str, student_list))
 
-    db_query = f"""SELECT student_list.name,                 
+    # Format query to select data within specified date range and curriculum
+    db_query = f"""SELECT student_list.name,                  
                     student_list.iatc_id, 
+                    student_list.nat_id,
                     student_list.class,
+                    student_list.curriculum,
                     exam_results.exam,
-                    exam_results.score,
                     exam_results.result,
-                    exam_results.date
+                    exam_results.date,
+                    exam_results.type
                     FROM exam_results 
                     JOIN student_list ON exam_results.nat_id = student_list.nat_id
-                    WHERE student_list.iatc_id IN ({student_list_string}) AND exam_results.score_index = 1
-                    ORDER BY exam_results.date ASC
+                    WHERE student_list.curriculum = '{curriculum}' 
+                    AND exam_results.date >= '{startdate}' 
+                    AND exam_results.date <= '{enddate}'
                 """
     db_cursor.execute(db_query)
     output_data = db_cursor.fetchall()
     db_cursor.close()
     db_connection.close()
 
-    col_names = ['Name', 'IATC ID', 'Class', 'Subject', 'Score', 'Result', 'Date']
+    # Convert output to DataFrame for Excel export
+    col_names = ['Name', 'IATC ID', 'National ID', 'Class', 'Curriculum', 'Exam', 'Result', 'Date', 'Exam Type']
     df = pd.DataFrame(output_data, columns=col_names)
 
-    # Create an in-memory ZIP file
+    # Create an in-memory ZIP file to store individual Excel files
     zip_buffer = BytesIO()
     with zipfile.ZipFile(zip_buffer, "w") as zip_file:
-        for student_id in student_list:
-            filtered_df = df[df['IATC ID'] == student_id]
-
-            # Save each filtered dataframe to an in-memory buffer
-            excel_buffer = BytesIO()
-            with pd.ExcelWriter(excel_buffer, engine='openpyxl') as writer:
-                filtered_df.to_excel(writer, index=False, sheet_name=str(student_id))
-            
-            # Save Excel file to the zip
-            excel_filename = f"{student_id}.xlsx"
-            excel_buffer.seek(0)
-            zip_file.writestr(excel_filename, excel_buffer.read())
+        # Save the entire DataFrame to one Excel file
+        excel_buffer = BytesIO()
+        with pd.ExcelWriter(excel_buffer, engine='openpyxl') as writer:
+            df.to_excel(writer, index=False, sheet_name="Coversheet_Data")
+        
+        # Save Excel file in the zip
+        excel_buffer.seek(0)
+        zip_file.writestr("Coversheets.xlsx", excel_buffer.read())
 
     zip_buffer.seek(0)
     return zip_buffer
 
 # Streamlit interface
-st.title("Generate Theory Exam Coversheets")
-st.write("Enter a list of student IDs and download the Excel coversheets containing the highest result for each subject the student has taken.")
+st.title("Generate Exam Coversheets by Curriculum and Date Range")
+st.write("Select a curriculum and date range to generate an Excel coversheet with data within the specified criteria.")
 
-student_ids_input = st.text_area("Enter Student IDs separated by commas (e.g., 151596, 156756, 154960):")
-st.write("Need help generating a list of IDs? Download the Excel template:")
+# Curriculum selection
+curriculum = st.selectbox("Select Curriculum:", ["EASA", "GACA", "UAS"])
 
-# Direct link to the Excel file in GitHub
-template_url = "https://github.com/Bayr-Harrison/coversheetgenerator/raw/main/Coversheet%20Generator%20Input.xlsx"
-st.markdown(f"[Download Excel Template]({template_url})", unsafe_allow_html=True)
+# Date input from user
+startdate = st.date_input("Select Start Date:")
+enddate = st.date_input("Select End Date:")
 
-
-
+# Button to generate and download coversheets
 if st.button("Generate Coversheets"):
-    try:
-        student_list = [int(id.strip()) for id in student_ids_input.split(",")]
-        st.write("Generating coversheets...")
+    if startdate > enddate:
+        st.error("Error: End Date must be after Start Date.")
+    else:
+        try:
+            st.write("Generating coversheets...")
 
-        # Generate the zip file in memory
-        zip_file = generate_coversheets_zip(student_list)
+            # Generate the zip file in memory
+            zip_file = generate_coversheets_zip(curriculum, startdate, enddate)
 
-        # Offer the zip file for download
-        st.download_button(
-            label="Download All Coversheets as ZIP",
-            data=zip_file,
-            file_name="coversheets.zip",
-            mime="application/zip"
-        )
-        st.success("Coversheets zip generated successfully!")
-
-    except Exception as e:
-        st.error(f"An error occurred: {e}")
+            # Download button for the zip file
+            st.download_button(
+                label="Download All Coversheets as ZIP",
+                data=zip_file,
+                file_name="coversheets.zip",
+                mime="application/zip"
+            )
+            st.success("Coversheets zip generated successfully!")
+        except Exception as e:
+            st.error(f"An error occurred: {e}")
