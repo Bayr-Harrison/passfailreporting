@@ -7,6 +7,17 @@ import zipfile
 from openpyxl.styles import Font, Border, Side, Alignment, PatternFill
 from openpyxl.utils import get_column_letter
 
+# Set a simple password
+PASSWORD = "os.environ["APP_PASSWORD"]"
+
+# Create a password input field in Streamlit
+password = st.text_input("Enter Password", type="password")
+if password != PASSWORD:
+    st.warning("Incorrect password")
+    st.stop()
+else:
+    st.success("Access granted!")
+
 # Function to query database and generate coversheets in a zip file
 def generate_coversheets_zip(curriculum, startdate, enddate):
     db_connection = pg8000.connect(
