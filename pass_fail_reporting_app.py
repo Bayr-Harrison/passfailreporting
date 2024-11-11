@@ -8,7 +8,7 @@ from openpyxl.styles import Font, Border, Side, Alignment, PatternFill
 from openpyxl.utils import get_column_letter
 
 # Set a simple password
-PASSWORD = "os.environ["APP_PASSWORD"]"
+PASSWORD = os.environ["APP_PASSWORD"]
 
 # Create a password input field in Streamlit
 password = st.text_input("Enter Password", type="password")
